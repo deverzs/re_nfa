@@ -38,18 +38,41 @@ vector<transition> NFA[10];
 // ------------- Put your utility functions here --------------------
 
 // ** Such as display and copy functions for machines
-void copyMachine(int M)
+/*
+int copyMachine(int M)
 {
-	vector<transition> newM;
+	vector<transition> T; // the new machine to create and add to NFA
+
+	transition t;
+	t = NFA->at(M);
+	//only changing states because the M already has the arrow
+	t.start = states++;
+	t.end = states++;
+	T.push_back(t);
+
+	cout << "New machine copied to index: " << machineNum - 1 << endl;
+	cout << "\nINCREM MACHINE NUM to: " << machineNum << "\n";
+	return machineNum-1;
 
 }
+*/
+
+// HAPPY with this
 void displayTransition(transition t)
 {
-	cout << "Machine" << machineNum++ << " for " << t.arrow << endl;
-	cout << t.start << "---" << t.arrow << "---" << t.end << endl;
-	cout << "Initial = " << t.start << endl;
-	cout << "Final = " << t.end << endl;
-	cout << "==================================\n";
+	cout << t.start << "---" << t.arrow << "---" << t.end << " ";
+
+}
+
+void displayMachine(int m)
+{
+	/*
+	for (int i = 0; i < NFA->size(); i++)
+	{
+		cout << NFA->at(m - 1).start << " ---"  << NFA->at(m - 1).end;
+	}
+	*/
+	
 }
 
 // ------------- Machine processing functions follow -----------
@@ -61,22 +84,54 @@ void processConcat()
 	cout << "Enter number of the first machine:"; cin >> M1;
 	cout << "Enter number of the second machine:"; cin >> M2;
 
+
+	//redo copy
 	if (M1 == M2) {
-		cout << "Concatenating with itself..." << endl;
-		cout << "copying the machine first ...." << endl;
-		// ** Copy the machine with new state numbers and display it  (***)
-		copyMachine(M1);
-		// The copy should be treated as M2
+
+
 	}
 
 	vector<transition> M; // the new machine to create and add to NFA
 
 	// ** For the new machine M to add to NFA:     
 	   // - add M1 transitions and M2 transitions. 
-	   // - add a transition from M1's end to M2's start.
+		M.push_back(NFA->at(M1));
+		// - add a transition from M1's end to M2's start.
+		transition t;
+		t.start = NFA->at(M1).end;
+		t.end = NFA->at(M2).start;
+		t.arrow = ' ';
+		M.push_back(t);
+		// - add  M2 transitions. 
+		M.push_back(NFA->at(M2));
+	  
+
+		// ** Add M to NFA.
+		NFA[machineNum++] = M;
+		cout << "==================================\n";
 
 	// ** Display the new concatenated machine M.
-	// ** Add M to NFA.
+		cout << "Machine" << machineNum -1 << " for " << "Machine" << M1 << "-" << "Machine" << M2 << endl ;
+
+
+
+		//displayTransition(NFA->at(M1));
+		//displayTransition(t);
+		//displayTransition(NFA->at(M2));
+
+
+		cout << "Display M\n";
+		displayTransition(M.at(0));
+		displayTransition(M.at(1));
+		displayTransition(M.at(2));
+		
+		cout << "\nInitial = " << NFA->at(M1).start << endl;
+		cout << "Final = " << NFA->at(M2).end << endl;
+		cout << "==================================\n";
+		cout << NFA[3].size() << endl ;
+		cout << NFA[3].at(0).start << endl;
+
+
 
 } // end of concat
 // (***) It would be good to write a copy machine function
@@ -176,8 +231,11 @@ int main()
 		// Display the transition.
 		displayTransition(trs);
 		// Add it to NFA as a machine.
+		machineNum++;
+		cout << "\nINCREM MACHINE NUM to: " << machineNum << "\n";
 		NFA->push_back(trs);
 		t = NFA->back();
+	
 	}
 	fin.close();
 
@@ -212,7 +270,7 @@ int main()
 	NFA->at(1);
 	for (int i = 0; i < machineNum; i++)
 	{		
-		t = NFA->at(i);
+		t = NFA->at(i); 
 		fout << "Machine" << i << " for " << t.arrow << endl;
 		fout << t.start << "---" << t.arrow << "---" << t.end << endl;
 		fout << "Initial = " << t.start << endl;
