@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sstream>
+
 using namespace std;
 
 /*  Complete all ** parts */
@@ -8,6 +10,8 @@ using namespace std;
 //==============================================
 //  CS421 RE to NFA-e extra credit by: ** 
 //===============================================
+
+
 
 // Each transition within a machine
 struct transition
@@ -17,62 +21,51 @@ struct transition
 	int end;      // next state
 };
 
-int states = 0;
-int machineNum = 0;
 // NFA can store up to 10 machines.  
 // Each machine is a vector of transitions.
 vector<transition> NFA[10];
+string NFAstring[10]; 
 
-/* ALGORITHM:
-   You will read the re.txt file to create initial
-   component machines and store these machines into NFA.
-   You will then ask the user what operation they want
-   to perform on the already created machines.
-   As a new machine is created, add it to NFA.
-   Repeat.
-   NFA will be output to nfa-e.txt in the end.
-*/
-
+int state = 0;
+int machineNum = 0;
 
 
 // ------------- Put your utility functions here --------------------
 
-// ** Such as display and copy functions for machines
-/*
-int copyMachine(int M)
+void dispayTransition(transition t)
 {
-	vector<transition> T; // the new machine to create and add to NFA
-
-	transition t;
-	t = NFA->at(M);
-	//only changing states because the M already has the arrow
-	t.start = states++;
-	t.end = states++;
-	T.push_back(t);
-
-	cout << "New machine copied to index: " << machineNum - 1 << endl;
-	cout << "\nINCREM MACHINE NUM to: " << machineNum << "\n";
-	return machineNum-1;
-
-}
-*/
-
-// HAPPY with this
-void displayTransition(transition t)
-{
-	cout << t.start << "---" << t.arrow << "---" << t.end << " ";
-
+	cout << t.start << "--" << t.arrow << "--" << t.end << " " ;
 }
 
-void displayMachine(int m)
+void displayMachine(vector<transition> M)
 {
-	/*
-	for (int i = 0; i < NFA->size(); i++)
+	for (int i = 0; i < M.size(); i++)
 	{
-		cout << NFA->at(m - 1).start << " ---"  << NFA->at(m - 1).end;
+		dispayTransition(M[i]);
 	}
-	*/
+	cout << "\nInitial= " << M.at(0).start << endl;
+	cout << "Final= " << M.at(M.size() - 1).end ;
+	cout << "\n=======================\n";
+}
+
+int copyMachine(vector<transition> M) {
+
+	vector<transition> newM;
+	transition newt;
+
+	for (int i = 0; i < M.size(); i++)
+	{
+		newt.arrow = M[i].arrow;
+		newt.start = state++;
+		newt.end = state++;
+		newM.push_back(newt);
+	}
 	
+	NFA[machineNum] = newM;
+	cout << "=======================\n";
+	cout << "Machine" << machineNum << " :"  << endl;
+	displayMachine(NFA[machineNum]);
+	return machineNum++;
 }
 
 // ------------- Machine processing functions follow -----------
@@ -84,62 +77,55 @@ void processConcat()
 	cout << "Enter number of the first machine:"; cin >> M1;
 	cout << "Enter number of the second machine:"; cin >> M2;
 
-
-	//redo copy
 	if (M1 == M2) {
-
-
+		cout << "Concatenating with itself..." << endl;
+		cout << "\n...copying the machine first ...." << endl;
+		// Copy the machine with new state numbers and display it 
+		// The copy should be treated as M2
+		M2 = copyMachine(NFA[M1]);		
 	}
 
 	vector<transition> M; // the new machine to create and add to NFA
+	transition t;
 
-	// ** For the new machine M to add to NFA:     
+	//  For the new machine M to add to NFA:     
 	   // - add M1 transitions and M2 transitions. 
-		M.push_back(NFA->at(M1));
-		// - add a transition from M1's end to M2's start.
-		transition t;
-		t.start = NFA->at(M1).end;
-		t.end = NFA->at(M2).start;
-		t.arrow = ' ';
-		M.push_back(t);
-		// - add  M2 transitions. 
-		M.push_back(NFA->at(M2));
-	  
+	   // - add a transition from M1's end to M2's start.
+	t.arrow = ' ';
+	t.start = NFA[M1].at(NFA[M1].size() - 1).end;
+	t.end = NFA[M2].at(0).start;
+	
+	for (int i = 0; i < NFA[M1].size(); i++)
+	{
+		M.push_back(NFA[M1].at(i)); 
+	}
+	M.push_back(t);
+	for (int i = 0; i < NFA[M2].size(); i++)
+	{
+		M.push_back(NFA[M2].at(i));
+	}
 
-		// ** Add M to NFA.
-		NFA[machineNum++] = M;
-		cout << "==================================\n";
+	// Display the new concatenated machine M.
+	cout << "=======================\n";
+	cout << "Machine" << machineNum << " for " ;
 
-	// ** Display the new concatenated machine M.
-		cout << "Machine" << machineNum -1 << " for " << "Machine" << M1 << "-" << "Machine" << M2 << endl ;
+	stringstream sstm;
+	sstm << "Machine" << M1 << "-Machine" << M2;
+	string detail = sstm.str();
+	cout << detail << endl ;
+	NFAstring[machineNum] = detail;
+	displayMachine(M);
 
-
-
-		//displayTransition(NFA->at(M1));
-		//displayTransition(t);
-		//displayTransition(NFA->at(M2));
-
-
-		cout << "Display M\n";
-		displayTransition(M.at(0));
-		displayTransition(M.at(1));
-		displayTransition(M.at(2));
-		
-		cout << "\nInitial = " << NFA->at(M1).start << endl;
-		cout << "Final = " << NFA->at(M2).end << endl;
-		cout << "==================================\n";
-		cout << NFA[3].size() << endl ;
-		cout << NFA[3].at(0).start << endl;
-
-
-
+	//  Add M to NFA.
+	NFA[machineNum++] = M ;
+	
 } // end of concat
-// (***) It would be good to write a copy machine function
-// which creates a new machine with new state numbers
+
 
 void processOr()
 {
 	int M1, M2; // machine numbers
+	transition t1, t2, t3, t4;
 
 	cout << "Enter number of the first machine:"; cin >> M1;
 	cout << "Enter number of the second machine:"; cin >> M2;
@@ -159,8 +145,51 @@ void processOr()
 	   // - add a transition from M1's end to new final.
 	   // - add a transition from M2's end to new final.
 
+	t1.start = state;
+	t2.start = state++;
+	t3.end = state;
+	t4.end = state++;
+
+	t1.end = NFA[M1].at(0).start;
+	t2.end = NFA[M2].at(0).start;
+
+	t3.start = NFA[M1].at(NFA[M1].size() - 1).end;
+	t4.start = NFA[M2].at(NFA[M2].size() - 1).end;
+
+	t1.arrow = ' ';
+	t2.arrow = ' ';
+	t3.arrow = ' ';
+	t4.arrow = ' ';
+
+	M.push_back(t1);
+	M.push_back(t2);
+
+	for (int i = 0; i < NFA[M1].size(); i++)
+	{
+		M.push_back(NFA[M1].at(i));
+	}
+	for (int i = 0; i < NFA[M2].size(); i++)
+	{
+		M.push_back(NFA[M2].at(i));
+	}
+	M.push_back(t3);
+	M.push_back(t4);
+
+
 	// ** Display the machine M.
-	// ** Add the machine M to NFA
+	cout << "=======================\n";
+	cout << "Machine" << machineNum << " for ";
+
+	stringstream sstm;
+	sstm << "Machine" << M1 << "|Machine" << M2;
+	string detail = sstm.str();
+	cout << detail << endl;
+	NFAstring[machineNum] = detail;
+	displayMachine(M);
+
+	//  Add M to NFA.
+	NFA[machineNum++] = M;
+
 }// end of OR 
 
 
@@ -214,37 +243,44 @@ int main()
 	cout << "But it is done interactively by asking you to apply operators" << endl;
 	cout << "to component machines." << endl;
 
+	//ifstream fin("re.txt", ios::in);  // components come from re.txt
 	ifstream fin("C:\\Users\\dever\\Desktop\\Spring2020\\TheoryComp\\cs421files\\CS421Progs\\DemosAndEC\\1_RE-NFAe\\re.txt", ios::in);  // components come from re.txt
-	char c;
+	
 	transition  t;
 	int index = 0;
-	
+	char c;
 
 	cout << "Reading in the components from re.txt...." << endl;
+	cout << "=======================\n";
+	string details;
+
 	while (fin >> c)
 	{
 		transition trs;
 		// Build a transition (trs) for arrow label c.
-		trs.start = states++;
 		trs.arrow = c;
-		trs.end = states++;
+		trs.start = state++;
+		trs.end = state++;
+		
 		// Display the transition.
-		displayTransition(trs);
+		vector<transition> M;
+		M.push_back(trs);
+		cout << "Machine" << machineNum << " for " << c << endl;
+		details = c;
+		
+		displayMachine(M);
+
 		// Add it to NFA as a machine.
-		machineNum++;
-		cout << "\nINCREM MACHINE NUM to: " << machineNum << "\n";
-		NFA->push_back(trs);
-		t = NFA->back();
-	
+		NFAstring[machineNum] = details;
+		NFA[machineNum++] = M;
 	}
 	fin.close();
-
 	// -- finished creating component machines
+
 	// -- It then asks the user to combine machines.  
 	// -- Combined machines' transitions will be added to NFA.
 
-	char A;  // user choice
-	A = 'a';
+	char A = 'a';  // user choice
 	while (A != 'n')
 	{
 		cout << "---- MENU -----" << endl;
@@ -262,21 +298,23 @@ int main()
 
 	}// end of interaction
 
-
 	cout << "Outputting all machines to nfa-e.txt... " << endl;
-	ofstream fout("C:\\Users\\dever\\Desktop\\Spring2020\\TheoryComp\\cs421files\\CS421Progs\\DemosAndEC\\1_RE-NFAe\\nfa-e.txt", ios::out);
+
+	//ofstream fout("nfa-e.txt", ios::out);
+	ofstream fout("C:\\Users\\dever\\Desktop\\Spring2020\\TheoryComp\\EC\\nfa-e.txt", ios::out);
+	
 	//  Send all NFA contents to the output file which
 	//    is created new each time.
-	NFA->at(1);
-	for (int i = 0; i < machineNum; i++)
-	{		
-		t = NFA->at(i); 
-		fout << "Machine" << i << " for " << t.arrow << endl;
-		fout << t.start << "---" << t.arrow << "---" << t.end << endl;
-		fout << "Initial = " << t.start << endl;
-		fout << "Final = " << t.end << endl;
-		fout << "==================================\n";
+	fout << "=======================\n";
+	for (int j = 0; j < machineNum; j++) {
+		fout << "Machine" << j << " for " << NFAstring[j]   << endl;
+		for (int i = 0; i < NFA[j].size(); i++)
+		{
+			fout << NFA[j].at(i).start << "--" << NFA[j].at(i).arrow << "--" << NFA[j].at(i).end << " ";
+		}
+		fout << "\nInitial= " << NFA[j].at(0).start << endl;
+		fout << "Final= " << NFA[j].at(NFA[j].size() - 1).end;
+		fout << "\n=======================\n";
 	}
-	
 
 } // the end
